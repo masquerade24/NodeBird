@@ -32,12 +32,12 @@ const upload = multer({ // storage 속성과 limits 속성 설정을 인수로 �
 
 // POST /post/img 라우터 (이미지 업로드)
 router.post('/img', isLoggedIn, upload.single('img'), (req, res) => { // 로그인된 상태에서, 이미지 업로드 받고, 이미지 저장 경로를 응답한다.
-    console.log(req.file);
+    console.log(req.file, '파일이름인거시야');
     res.json({ url: `/img/${req.file.filename}` });
 });
 
 const upload2 = multer();
-//POST /post 라우터 (게시글 업로드를 처리)
+// POST /post 라우터 (게시글 업로드를 처리)
 router.post('/', isLoggedIn, upload2.none(), async (req, res, next) => { // 로그인된 상태에서, 업로드 받은 이미지의 데이터(req.body)를 Post 릴레이션에 추가
     try {
         const post = await Post.create({

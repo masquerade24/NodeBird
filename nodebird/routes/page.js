@@ -20,18 +20,18 @@ router.get('/join', isNotLoggedIn, (req, res) => {
   res.render('join', { title: '뀨뀨 회원가입 - NodeBird' });
 });
 
-// GET / 메인 페이지(로그인하고 난 후) 라우터이다.
+// GET / 메인 페이지 라우터이다.
 router.get('/', async (req, res, next) => {
   try {
     const posts = await Post.findAll({ // DB에서 게시글을 조회한다. User모델의 id와 nick을 JOIN한다. 생성일시에 내림차순(최신순)으로 정렬한다.
       include: {
         model: User,
-        attributes: ['id', 'nick'],
+        attributes: ['id', 'nick'], // id와 nick을 가져오는데.. id는 왜 가져왔을까?
       },
-      order: [['createdAt', 'DESC']],
+      order: [['createdAt', 'DESC']], // 생성날짜에 내림차순 = 최신순으로 정렬
     });
-    res.render('main', { // 게시글을 조회한 결과를 twits에 넣어 렌더링한다.
-      title: 'NodeBird',
+    res.render('main', { // 'main' 뷰에 데이터로 title에는 NodeBird를 넣고, twits에는 조회한 게시글들을 넣는다.
+      title: '뀽NodeBird', // 크롭 탭에 나오는 이름
       twits: posts,
     });
   } catch (err) {
@@ -54,7 +54,7 @@ router.get('/hashtag', async (req, res, next) => {
     }
 
     return res.render('main', { // 조회 후 메인 페이지를 렌더링하면서 전체 게시글 대신 조회된 게시글만 twits에 넣어 렌더링한다.
-      title: `${query} | 뀨NodeBird`,
+      title: `${query} | 뀽NodeBird`,
       twits: posts,
     });
   } catch (error) {

@@ -6,6 +6,7 @@ const User = require('../models/user');
 
 const router = express.Router();
 
+// POST /auth/join
 router.post('/join', isNotLoggedIn, async (req, res, next) => {
     const { email, nick, password } = req.body; // req.body 객체에 있는 키 email, nick, password의 값을 각각 변수 email, nick, password에 저장.
     try {
@@ -26,13 +27,14 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => {
     }
 });
 
+// POST /auth/login 왜 앞에 /auth가 붙냐? main.html에 가보면 '로그인' 버튼에 
 router.post('/login', isNotLoggedIn, (req, res, next) => {
-    passport.authenticate('local', (authError, user, info) => {
-      if (authError) {
+    passport.authenticate('local', (authError, user, info) => { // 로컬 로그인 전략 수행. passport-local. 로컬 전략의 done 함수와 교과서 참고할 것
+      if (authError) { // 오류가 발생한 경우
         console.error(authError);
         return next(authError);
       }
-      if (!user) {
+      if (!user) { // 오류가 발생하지 않았지만 등록된 user가 없는 경우.
         return res.redirect(`/?loginError=${info.message}`);
       }
       return req.login(user, (loginError) => {
@@ -45,6 +47,7 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
     })(req, res, next); // 미들웨어 내의 미들웨어에는 (req, res, next)를 붙입니다.
   });
   
+  // GET /auth/logout
   router.get('/logout', isLoggedIn, (req, res) => {
     req.logout();
     req.session.destroy();
