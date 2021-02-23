@@ -62,12 +62,10 @@ app.use((req, res, next) => {
 })
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
-    console.log(`스색`);
+    console.log(`에러핸들링 체크`);
     res.locals.error = process.env.NODE_ENV !== 'production' ? err : {}; // If you want to set an environment variable, input SET NODE_ENV=development
     res.status(err.status || 500);
     res.render('error');
 });
 
-app.listen(app.get('port'), () => {
-    console.log(app.get('port'), '번 포트에서 대기 중');
-});
+module.exports = app;

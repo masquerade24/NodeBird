@@ -1,0 +1,32 @@
+{
+    "config": {
+        "target": "http://localhost:8001",
+        "phases": [
+            {
+                "duration": 30,
+                "arrivalRate": 10
+            }
+        ]
+    },
+    "scenarios": [{
+        "flow": [
+            {
+                "get": {
+                    "url": "/"
+                }
+            }, {
+                "post": {
+                    "url": "/auth/login",
+                    "json": {
+                        "email": "ewr1029@daum.net",
+                        "password": "1234"
+                    }
+                }
+            }, {
+                "get": {
+                    "url": "/hashtag?hashtag=Todo"
+                }
+            }
+        ]
+    }]
+}
