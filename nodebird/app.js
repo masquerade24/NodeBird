@@ -6,14 +6,23 @@ const session = require('express-session');
 const nunjucks = require('nunjucks'); // For template engine
 const dotenv = require('dotenv'); // Can use .env file
 const passport = require('passport');
+const helmet = require('helmet');
+const hpp = require('hpp');
+const redis = require('redis');
+const RedisStore = require('connect-redis')(session);
 
 dotenv.config(); // Load the .env file to use environment variable.
+const redisClient = redis.createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD,
+});
 const pageRouter = require('./routes/page');
 const authRouter = require('./routes/auth');
 const postRouter = require('./routes/post');
 const userRouter = require('./routes/user');
 const { sequelize } = require('./models');
 const passportConfig = require('./passport');
+const logger = require('./logger');
 
 const app = express(); // Creates an Express application.
 passportConfig(); // Set the passport.
@@ -31,14 +40,20 @@ sequelize.sync({ force: false }) // force가 true이면 서버 실행 시마다 
         console.error(err);
     });
 
-app.use(morgan('dev')); // Use the middleware with 'app.use(mw)'.
+if (process.env.NODE_ENV === 'production') {
+    app.use(morgan('combined'));
+    app.use(helmet({ contentSecurityPolicy: false }));
+    app.use(hpp());
+} else {
+    app.use(morgan('dev'));
+}
 app.use(express.static(path.join(__dirname, 'public'))); // Provide a static files(like front.html) in a folder path. if no static files, execute next().
 app.use('/img', express.static(path.join(__dirname, 'uploads'))); // static 미들웨어가 /img 경로의 정적 파일들을 제공한다. (클라이언트에서 접근이 가능해진다.)
 app.use(express.json()); // 이것은 JSON 페이로드와 들어오는 요청을 파싱한다. 이것은 body-parser에 기반을 둔다.
 // body-parser interpret a req.data(request body's data) and make it req.body.
 app.use(express.urlencoded({ extended: false })); // true: use qs(npm) module, false: use querystring(node) module.
 app.use(cookieParser(process.env.COOKIE_SECRET)); // Interpret cookies enclosed in request and make it req.cookies.
-app.use(session({ // req.session store this session temporarily.
+const sessionOption = {
     resave: false,
     saveUninitialized: false,
     secret: process.env.COOKIE_SECRET,
@@ -46,7 +61,12 @@ app.use(session({ // req.session store this session temporarily.
         httpOnly: true,
         secure: false,
     },
-}));
+    store: new RedisStore({ client: redisClient }),
+}
+if (process.env.NODE_ENV === 'production') {
+    sessionOption.proxy = true;
+}
+app.use(session(sessionOption));
 app.use(passport.initialize()); // 요청(req)에 passport 설정을 심는다.
 app.use(passport.session()); // req.session 객체에 passport 정보를 저장한다.
 
@@ -58,6 +78,8 @@ app.use('/user', userRouter);
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`); // 'GET /hahahoho 라우터가 없습니다.'
     error.status = 404;
+    logger.info('hello');
+    logger.error(error.message);
     next(error); // Move to error handler.
 })
 app.use((err, req, res, next) => {
